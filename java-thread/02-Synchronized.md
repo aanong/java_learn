@@ -178,3 +178,136 @@ JMM 是一种抽象概念，定义了程序中各个变量的访问规则。
 **答**：
 synchronized **可以**保证有序性，但仅限于"同步块内部看似串行"。它不能禁止指令重排序，只是保证了单线程执行的语义（as-if-serial）。
 但在 DCL 单例中，instance 变量逸出到同步块外部，因此必须加 volatile。
+
+---
+
+## 六、Happens-Before 原则详解
+
+### 6.1 什么是 Happens-Before
+
+Happens-Before 是 JMM（Java 内存模型）中的核心概念，用于描述两个操作之间的可见性关系。
+如果操作 A happens-before 操作 B，那么 A 的结果对 B 可见，且 A 的执行顺序排在 B 之前。
+
+**注意**：这是 JMM 的承诺，不代表物理上的执行顺序。
+
+### 6.2 八大 Happens-Before 规则
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Happens-Before 规则                          │
+├─────────────────────────────────────────────────────────────────┤
+│ 1. 程序次序规则（单线程内）                                      │
+│ 2. 管程锁定规则（unlock → lock）                                │
+│ 3. volatile 变量规则（写 → 读）                                 │
+│ 4. 传递性规则（A→B, B→C ⇒ A→C）                                │
+│ 5. 线程启动规则（start() → run()）                              │
+│ 6. 线程终止规则（run() → join()返回）                           │
+│ 7. 线程中断规则（interrupt() → 检测到中断）                     │
+│ 8. 对象终结规则（构造函数 → finalize()）                        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### 1. 程序次序规则 (Program Order Rule)
+```java
+// 在单线程中，代码按照程序顺序执行
+int a = 1;      // 操作A
+int b = 2;      // 操作B
+int c = a + b;  // 操作C
+// A happens-before B, B happens-before C
+```
+
+#### 2. 管程锁定规则 (Monitor Lock Rule)
+```java
+synchronized (lock) {
+    count++; // 操作A
+} // unlock happens-before 后续的 lock
+
+synchronized (lock) {
+    int x = count; // 操作B - 能看到操作A的结果
+}
+```
+
+#### 3. volatile 变量规则 (Volatile Variable Rule)
+```java
+volatile boolean flag = false;
+int data = 0;
+
+// 线程1
+data = 42;        // 操作A
+flag = true;      // 操作B（volatile写）
+
+// 线程2
+if (flag) {       // 操作C（volatile读）
+    int x = data; // 操作D - x一定是42
+}
+// B happens-before C，结合传递性，A happens-before D
+```
+
+#### 4. 传递性 (Transitivity)
+```java
+// 如果 A happens-before B，B happens-before C
+// 那么 A happens-before C
+```
+
+#### 5. 线程启动规则 (Thread Start Rule)
+```java
+int x = 10;
+Thread t = new Thread(() -> {
+    int y = x; // y一定是10，因为主线程的x=10 happens-before run()
+});
+t.start();
+```
+
+#### 6. 线程终止规则 (Thread Termination Rule)
+```java
+Thread t = new Thread(() -> {
+    data = 100; // 操作A
+});
+t.start();
+t.join(); // 操作A happens-before join()返回
+int x = data; // x一定是100
+```
+
+#### 7. 线程中断规则 (Thread Interruption Rule)
+```java
+Thread t = new Thread(() -> {
+    while (!Thread.currentThread().isInterrupted()) {
+        // 工作
+    }
+});
+t.start();
+t.interrupt(); // interrupt() happens-before 线程检测到中断
+```
+
+#### 8. 对象终结规则 (Finalizer Rule)
+```java
+// 构造函数的最后一行 happens-before finalize() 的第一行
+```
+
+### 6.3 Happens-Before 的实际应用
+
+```java
+public class HappensBeforeDemo {
+    private int a = 0;
+    private volatile boolean flag = false;
+    
+    public void writer() {
+        a = 1;          // 1
+        flag = true;    // 2 volatile写
+    }
+    
+    public void reader() {
+        if (flag) {     // 3 volatile读
+            int i = a;  // 4 一定能看到 a = 1
+        }
+    }
+}
+```
+
+**分析**：
+- 1 happens-before 2（程序次序规则）
+- 2 happens-before 3（volatile规则）
+- 3 happens-before 4（程序次序规则）
+- 根据传递性：1 happens-before 4
+
+因此，当读到 `flag = true` 时，一定能读到 `a = 1`。
