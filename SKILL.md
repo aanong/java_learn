@@ -199,7 +199,40 @@ description: Java架构师学习资料
 - MVCC（Multi-Version Concurrent Control ）多版本并发控制
 - LBCC（Lock-Based Concurrent Control） 锁并发控制
 
-
-
+# MQ
+[MQl学习资料]
+## Kafka
+- 使用手册
+- 部署方案
+- 集群部署
+- 源码分析
+- 常见问题
+## RocketMQ
+- 使用手册
+- 部署方案
+- 集群部署
+- 源码分析
+- 常见问题
+## Pulsar
+- 使用手册
+- 部署方案
+- 集群部署
+- 源码分析
+- 常见问题
+# Redis
+[Redis学习资料]
+## Redis 基础
+- 使用手册
+- 数据结构，底层原理，常见应用
+- Redis为什么这么快
+## Redis应用
+- 持久化
+- 缓存一致性
+- 内存淘汰策略
+- 分布式锁
+##  集群部署
+- 哨兵
+- 主从复杂
+- Redis Cluster
 
 
