@@ -65,7 +65,7 @@ description: Java架构师学习资料
 ## Spring 常用面试点
 - 常用面试题以及答案
 
-## Netty
+## netty
 - 网络分成
 - TCP/UDP
 - Netty常用案例
@@ -234,5 +234,4 @@ description: Java架构师学习资料
 - 哨兵
 - 主从复杂
 - Redis Cluster
-
 
