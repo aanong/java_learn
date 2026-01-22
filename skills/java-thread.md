@@ -1,7 +1,8 @@
 ---
-name: desgin-learn
-description: 常用设计模式
+name: java-thread
+description: Java 并发与线程池学习
 ---
+
 
 # 单例模式
 ## 常见单例模式

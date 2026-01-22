@@ -90,9 +90,123 @@ ttlExecutor.submit(() -> {
 });
 ```
 
-## 三、ThreadLocal 使用场景总结
+## 三、ThreadLocal 源码深度解析
+
+### 3.1 ThreadLocalMap 的 Hash 算法
+
+```java
+// ThreadLocal.java
+private final int threadLocalHashCode = nextHashCode();
+
+// 神奇的哈希增量：0x61c88647
+private static final int HASH_INCREMENT = 0x61c88647;
+
+private static int nextHashCode() {
+    return nextHashCode.getAndAdd(HASH_INCREMENT);
+}
+```
+
+**为什么是 0x61c88647？**
+- 这是一个黄金分割数，能让哈希码均匀分布
+- 与 2^n 取模后，能尽量避免冲突
+
+### 3.2 线性探测法解决冲突
+
+```java
+// ThreadLocalMap.set()
+private void set(ThreadLocal<?> key, Object value) {
+    Entry[] tab = table;
+    int len = tab.length;
+    int i = key.threadLocalHashCode & (len-1);
+
+    // 线性探测：如果当前槽位被占用，向后找
+    for (Entry e = tab[i]; e != null; e = tab[i = nextIndex(i, len)]) {
+        ThreadLocal<?> k = e.get();
+        
+        // key 相同，更新值
+        if (k == key) {
+            e.value = value;
+            return;
+        }
+        
+        // key 为 null（被 GC 回收），替换 stale entry
+        if (k == null) {
+            replaceStaleEntry(key, value, i);
+            return;
+        }
+    }
+    
+    // 找到空槽位，插入新 Entry
+    tab[i] = new Entry(key, value);
+    // ...
+}
+```
+
+### 3.3 过期 Entry 清理机制
+
+ThreadLocalMap 在以下时机清理过期 Entry（key=null）：
+1. `set()` 时遇到 stale entry
+2. `get()` 时遇到 stale entry
+3. `remove()` 时
+4. `rehash()` 时
+
+```java
+// 探测式清理
+private int expungeStaleEntry(int staleSlot) {
+    Entry[] tab = table;
+    int len = tab.length;
+
+    // 清理 staleSlot 位置
+    tab[staleSlot].value = null;
+    tab[staleSlot] = null;
+    size--;
+
+    // 向后遍历，清理所有连续的 stale entry
+    // ...
+}
+```
+
+## 四、ThreadLocal 使用场景总结
 
 1.  **数据库连接/Session 管理**: `DataSourceTransactionManager`, `Hibernate Session`.
 2.  **Web 上下文**: Spring MVC `RequestContextHolder` (存储 `HttpServletRequest`).
 3.  **日志追踪**: MDC (Log4j/Logback) 存储 TraceID。
 4.  **SimpleDateFormat**: 避免每次 new，且保证线程安全。
+5.  **用户上下文传递**: 登录用户信息在调用链中传递。
+
+## 五、常见面试题
+
+### Q1: ThreadLocal 会造成内存泄漏吗？如何避免？
+**答**：会。
+- Entry 的 Key 是弱引用，GC 后变成 null
+- 但 Value 是强引用，如果线程不结束，Value 不会被回收
+- 解决方案：使用完毕后调用 `remove()` 方法
+
+### Q2: 为什么 Entry 的 Key 是弱引用？
+**答**：
+- 如果是强引用，即使 ThreadLocal 不再使用，也无法被 GC
+- 使用弱引用可以让 ThreadLocal 在没有外部引用时被回收
+- 但这只解决了 Key 的内存问题，Value 仍需手动 remove
+
+### Q3: ThreadLocal 如何保证线程安全？
+**答**：
+- 每个线程有自己的 ThreadLocalMap
+- 读写操作只在当前线程的 Map 中进行
+- 不存在并发访问，天然线程安全
+
+### Q4: InheritableThreadLocal 在线程池中的问题？
+**答**：
+- InheritableThreadLocal 只在创建子线程时复制父线程的值
+- 线程池中线程是复用的，不会重复复制
+- 解决方案：使用阿里的 TransmittableThreadLocal
+
+### Q5: FastThreadLocal 为什么比 ThreadLocal 快？
+**答**：
+- ThreadLocal 使用哈希表 + 线性探测，有冲突处理开销
+- FastThreadLocal 使用数组，每个实例有唯一 index，直接定位
+- FastThreadLocal 需要配合 FastThreadLocalThread 使用
+
+## 六、代码示例
+
+完整示例代码请参考：
+`src/main/java/com/example/thread/ThreadLocalDemo.java`

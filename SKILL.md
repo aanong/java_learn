@@ -1,7 +1,62 @@
 ---
 name: java-learn
-description: Java架构师学习资料
+description: Java 架构师学习资料（含可运行 Demo）
 ---
+
+# 学习总索引（以 skills/*.md 为准）
+
+> 说明：仓库内容分两层：
+> 1）`skills/*.md`：模块级“总纲 + 方法论 + 面试/踩坑”
+> 2）各模块目录（如 `java-thread/`、`jvm/` 等）：按文件拆分的深入文章
+> 3）`src/main/java`：与知识点对应的可运行 Demo
+
+## Java 基础（java-basics）
+- 入口：`skills/java-basics.md`
+- Demo：`src/main/java/com/example/basics/`
+
+## 设计模式（design-patterns）
+- 总纲：`skills/desgin-learn.md`
+- 文章：`design-patterns/01-Singleton.md` ~ `design-patterns/06-Delegate.md`
+- Demo：`src/main/java/com/example/designpatterns/`
+
+## Spring（spring-learn）
+- 总纲：`skills/spring-learn.md`
+- 文章：`spring-learn/01-SpringBean.md` ~ `spring-learn/10-SpringInterview.md`
+- Demo：`src/main/java/com/example/spring/`
+
+## Java 并发（java-thread）
+- 总纲（现状为设计模式提纲，后续可再拆分完善）：`skills/java-thread.md`
+- 文章：`java-thread/01-ThreadBasics.md` ~ `java-thread/06-ThreadPool.md`
+- Demo：`src/main/java/com/example/thread/`
+
+## JVM（jvm）
+- 总纲：`skills/JVM.md`
+- 文章：`jvm/01-ClassLifecycle.md` ~ `jvm/07-JVM_Tuning.md`
+- Demo：`src/main/java/com/example/jvm/`
+
+## MySQL（mysql）
+- 总纲：`skills/Mysql.md`
+- 文章：`mysql/01-ExecutionFlow.md` ~ `mysql/04-Transaction_Lock.md`
+
+## Redis（redis）
+- 总纲：`skills/Redis.md`
+
+## MQ（mq）
+- 总纲：`skills/MQ.md`
+
+## Netty（netty）
+- 入口：`skills/netty.md`
+- 文章：`spring-learn/09-Netty.md`
+
+# 推荐学习路径
+1. Java 基础 → 设计模式
+2. 并发（线程/锁/线程池）→ JVM（内存/GC/排错）
+3. Spring（IOC/AOP/事务）
+4. MySQL/Redis/MQ（结合业务场景）
+
+# 运行 Demo（JDK8 兼容）
+- 编译命令示例：`javac -encoding UTF-8 src/main/java/.../Demo.java`
+- 建议用 IDEA 直接运行各 `main` 方法
 
 # desgin-learn
 
@@ -200,7 +255,7 @@ description: Java架构师学习资料
 - LBCC（Lock-Based Concurrent Control） 锁并发控制
 
 # MQ
-[MQl学习资料]
+[MQ学习资料]
 ## Kafka
 - 使用手册
 - 部署方案
