@@ -1,35 +1,33 @@
-# Java Learning Path
+# Java 学习资料（按 skills 入口）
 
-Welcome to your Java learning kit! This repository contains structured modules to help you master Java.
+本仓库以 `skills/*.md` 作为“模块总纲入口”，配套各模块目录的深入文章，以及 `src/main/java` 的可运行 Demo。
 
-## 📚 Learning Path
+## 学习路径（推荐顺序）
+1. Java 基础：`skills/java-basics.md`
+2. 设计模式：`skills/desgin-learn.md`
+3. Java 并发：`skills/java-thread.md`
+4. JVM：`skills/JVM.md`
+5. Spring：`skills/spring-learn.md`
+6. MySQL / Redis / MQ：`skills/Mysql.md` → `skills/Redis.md` → `skills/MQ.md`
+7. Netty：`skills/netty.md`
 
-| Module | Description | Concepts Covered |
-|--------|-------------|------------------|
-| **[01_Intro_Setup](./01_Intro_Setup)** | Getting Started | JDK Setup, Hello World, Compilation |
-| **[02_Basics](./02_Basics)** | Fundamentals | Variables, Data Types, If-Else, Loops |
-| **[03_OOP](./03_OOP)** | Object-Oriented | Classes, Objects, Inheritance, Polymorphism |
-| **[04_Collections](./04_Collections)** | Data Structures | List, Set, Map, ArrayList, HashMap |
+## 模块导航
 
-## 🏗️ Java Architect Path
+| 模块 | skills 总纲入口 | 深入文章目录 | Demo 代码 |
+|------|------------------|--------------|----------|
+| Java 基础 | `skills/java-basics.md` | - | `src/main/java/com/example/basics/` |
+| 设计模式 | `skills/desgin-learn.md` | `design-patterns/` | `src/main/java/com/example/designpatterns/` |
+| 并发 | `skills/java-thread.md` | `java-thread/` | `src/main/java/com/example/thread/` |
+| JVM | `skills/JVM.md` | `jvm/` | `src/main/java/com/example/jvm/` |
+| Spring | `skills/spring-learn.md` | `spring-learn/` | `src/main/java/com/example/spring/` |
+| MySQL | `skills/Mysql.md` | `mysql/` | - |
+| Redis | `skills/Redis.md` | - | - |
+| MQ | `skills/MQ.md` | - | - |
+| Netty | `skills/netty.md` | `spring-learn/09-Netty.md` | - |
 
-| Module | Description | Concepts Covered |
-|--------|-------------|------------------|
-| **[design-patterns](./design-patterns)** | Design Patterns | Singleton, Factory, Strategy, Proxy, Delegate |
-| **[spring-learn](./spring-learn)** | Spring Ecosystem | Bean, AOP, MVC, IOC, Transaction, Boot |
-| **[java-thread](./java-thread)** | Concurrency | Threads, Locks, ThreadPool, CAS, JMM |
-| **[jvm](./jvm)** | JVM Internals | Memory Model, GC, Class Loading, Tuning |
-| **[mysql](./mysql)** | MySQL Database | Index, Transaction, Locks, Optimization |
+## 如何运行 Demo（JDK8 兼容）
+- 推荐：用 IDEA 直接运行各 `main` 方法
+- 命令行编译示例：`javac -encoding UTF-8 src/main/java/com/example/basics/EqualsHashCodeDemo.java`
 
-## 🚀 How to Use
-1. Start with `01_Intro_Setup` to prepare your environment.
-2. Go through each folder in order.
-3. Read the `README.md` in each folder.
-4. Compile and run the example code (`.java` files) to see it in action.
+> 总索引见：`SKILL.md`
 
-## ✨ Tips
-- **Practice**: Modify the code examples to see what happens.
-- **Debug**: Use `System.out.println` to understand flow.
-- **Explore**: Try adding new methods or classes.
-
-Happy Coding! ☕

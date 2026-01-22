@@ -22,6 +22,14 @@ import java.util.Queue;
  * @author java_learn
  */
 public class ReentrantLockDemo {
+
+    private static String repeat(String s, int count) {
+        StringBuilder sb = new StringBuilder(s.length() * count);
+        for (int i = 0; i < count; i++) {
+            sb.append(s);
+        }
+        return sb.toString();
+    }
     
     // ==================== 1. 基本使用 ====================
     
@@ -54,7 +62,7 @@ public class ReentrantLockDemo {
         
         public static void demo() throws InterruptedException {
             System.out.println("【1. ReentrantLock 基本使用】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             BasicUsage counter = new BasicUsage();
             
@@ -109,7 +117,7 @@ public class ReentrantLockDemo {
         
         public static void demo() {
             System.out.println("【2. 可重入性演示】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             ReentrantDemo demo = new ReentrantDemo();
             demo.outer();
@@ -128,7 +136,7 @@ public class ReentrantLockDemo {
         
         public static void demo() throws InterruptedException {
             System.out.println("【3. 公平锁 vs 非公平锁】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             // 非公平锁（默认）
             System.out.println("非公平锁测试：");
@@ -232,7 +240,7 @@ public class ReentrantLockDemo {
         
         public static void demo() throws InterruptedException {
             System.out.println("【4. Condition 条件变量 - 生产者消费者】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             ProducerConsumer pc = new ProducerConsumer();
             
@@ -279,7 +287,7 @@ public class ReentrantLockDemo {
         
         public static void demo() throws InterruptedException {
             System.out.println("【5. 可中断锁获取】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             ReentrantLock lock = new ReentrantLock();
             
@@ -336,7 +344,7 @@ public class ReentrantLockDemo {
         
         public static void demo() throws InterruptedException {
             System.out.println("【6. 超时获取锁】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             ReentrantLock lock = new ReentrantLock();
             
@@ -425,7 +433,7 @@ public class ReentrantLockDemo {
         
         public static void demo() throws InterruptedException {
             System.out.println("【7. 读写锁 ReentrantReadWriteLock】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             System.out.println("特点：读读共享，读写互斥，写写互斥");
             System.out.println();
             
@@ -457,7 +465,7 @@ public class ReentrantLockDemo {
     
     public static void comparison() {
         System.out.println("【8. ReentrantLock vs synchronized】");
-        System.out.println("-".repeat(50));
+        System.out.println(repeat("-", 50));
         System.out.println();
         System.out.println("| 特性           | synchronized      | ReentrantLock      |");
         System.out.println("|----------------|-------------------|--------------------|");

@@ -20,6 +20,14 @@ import java.util.concurrent.TimeUnit;
  * @author java_learn
  */
 public class ThreadLocalDemo {
+
+    private static String repeat(String s, int count) {
+        StringBuilder sb = new StringBuilder(s.length() * count);
+        for (int i = 0; i < count; i++) {
+            sb.append(s);
+        }
+        return sb.toString();
+    }
     
     // ==================== 1. 基本使用 ====================
     
@@ -36,7 +44,7 @@ public class ThreadLocalDemo {
         
         public static void demo() {
             System.out.println("【1. ThreadLocal 基本使用】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             // 线程1
             Thread t1 = new Thread(() -> {
@@ -98,7 +106,7 @@ public class ThreadLocalDemo {
         
         public static void demo() throws InterruptedException {
             System.out.println("【2. SimpleDateFormat 线程安全】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             ExecutorService executor = Executors.newFixedThreadPool(3);
             
@@ -169,7 +177,7 @@ public class ThreadLocalDemo {
         
         public static void demo() {
             System.out.println("【3. 请求上下文传递】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             // 模拟处理多个请求
             Thread request1 = new Thread(() -> {
@@ -241,7 +249,7 @@ public class ThreadLocalDemo {
         
         public static void demo() throws InterruptedException {
             System.out.println("【4. InheritableThreadLocal】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             // 父线程设置值
             NORMAL_TL.set("普通值");
@@ -280,7 +288,7 @@ public class ThreadLocalDemo {
         
         public static void demo() throws InterruptedException {
             System.out.println("【5. 线程池中的问题】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             System.out.println("问题：线程池中线程是复用的，InheritableThreadLocal 只在创建子线程时复制一次");
             System.out.println();
             
@@ -329,7 +337,7 @@ public class ThreadLocalDemo {
     public static class MemoryLeakAnalysis {
         public static void demo() {
             System.out.println("【6. 内存泄漏分析】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             System.out.println();
             System.out.println("ThreadLocalMap 的 Entry 结构：");
             System.out.println("  Entry extends WeakReference<ThreadLocal<?>> {");

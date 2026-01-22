@@ -19,6 +19,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author java_learn
  */
 public class ThreadPoolDemo {
+
+    private static String repeat(String s, int count) {
+        StringBuilder sb = new StringBuilder(s.length() * count);
+        for (int i = 0; i < count; i++) {
+            sb.append(s);
+        }
+        return sb.toString();
+    }
     
     // ==================== 1. ThreadPoolExecutor 核心参数 ====================
     
@@ -29,7 +37,7 @@ public class ThreadPoolDemo {
         
         public static void demo() {
             System.out.println("【1. ThreadPoolExecutor 七大参数】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             /*
              * 参数说明：
@@ -92,7 +100,7 @@ public class ThreadPoolDemo {
         
         public static void demo() throws InterruptedException {
             System.out.println("【2. 线程池工作流程】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             System.out.println("执行流程：");
             System.out.println("  1. 提交任务");
@@ -149,7 +157,7 @@ public class ThreadPoolDemo {
         
         public static void demo() {
             System.out.println("【3. 四种拒绝策略】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             System.out.println("1. AbortPolicy（默认）");
             System.out.println("   抛出 RejectedExecutionException 异常");
@@ -205,7 +213,7 @@ public class ThreadPoolDemo {
         
         public static void demo() {
             System.out.println("【4. 常见线程池类型】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             System.out.println("1. FixedThreadPool - 固定大小线程池");
             System.out.println("   new ThreadPoolExecutor(n, n, 0L, LinkedBlockingQueue)");
@@ -241,7 +249,7 @@ public class ThreadPoolDemo {
         
         public static void demo() throws InterruptedException {
             System.out.println("【5. 线程池监控】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             ThreadPoolExecutor executor = new ThreadPoolExecutor(
                 2, 5, 60, TimeUnit.SECONDS,
@@ -284,7 +292,7 @@ public class ThreadPoolDemo {
         
         public static void demo() {
             System.out.println("【6. 线程池最佳实践】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             System.out.println("1. 线程池大小设置：");
             int cpuCores = Runtime.getRuntime().availableProcessors();
@@ -360,7 +368,7 @@ public class ThreadPoolDemo {
         
         public static void demo() throws InterruptedException {
             System.out.println("【7. 生产环境线程池示例】");
-            System.out.println("-".repeat(50));
+            System.out.println(repeat("-", 50));
             
             ThreadPoolExecutor pool = createPool("BizPool", 4, 8, 100);
             
