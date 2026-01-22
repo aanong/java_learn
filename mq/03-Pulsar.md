@@ -1,62 +1,113 @@
-# Apache Pulsar 学习资料
+# Pulsar 架构师学习资料
 
-## 一、使用手册
+## 一、Pulsar 独特架构：存算分离
 
-### 1.1 什么是 Pulsar
-Apache Pulsar 是下一代云原生分布式消息流平台，采用计算与存储分离的架构。
+### 1.1 组件拆解
+- **Broker (计算层)**: 
+  - 无状态，不存数据。
+  - 负责协议解析、权限控制、负载均衡、消息分发。
+  - 扩容非常容易，启动新节点即可。
+- **BookKeeper (存储层)**:
+  - 有状态，由多个 **Bookie** 节点组成。
+  - 负责数据持久化 (Ledger)。
+  - 扩容时，新数据自动写入新节点，旧数据无需迁移 (Rebalance)，这是相比 Kafka 的巨大优势。
+- **ZooKeeper**: 存储元数据 (租户、Namespace、Topic 配置、Ledger 归属)。
 
-### 1.2 核心架构 (计算存储分离)
-- **Broker**: 无状态服务层，负责消息的接收、分发和管理，不存储数据。
-- **BookKeeper (Bookie)**: 存储层，负责持久化消息，由 Bookie 节点组成。
-- **ZooKeeper**: 元数据存储和协调。
+### 1.2 Java 客户端实战
 
-### 1.3 关键特性
-- **多租户**: 内置多租户支持 (Tenant -> Namespace -> Topic)。
-- **GEO Replication**: 原生跨地域复制。
-- **分层存储 (Tiered Storage)**: 自动将冷数据卸载到 S3/HDFS。
-
-## 二、部署方案
-
-### 2.1 组件依赖
-- ZooKeeper
-- BookKeeper
-- Pulsar Broker
-
-### 2.2 独立模式 (Standalone)
-```bash
-bin/pulsar standalone
+#### Maven 依赖
+```xml
+<dependency>
+    <groupId>org.apache.pulsar</groupId>
+    <artifactId>pulsar-client</artifactId>
+    <version>3.0.0</version>
+</dependency>
 ```
-适合开发测试，所有组件运行在一个 JVM 中。
 
-### 2.3 集群部署
-1. 部署 ZooKeeper 集群。
-2. 初始化集群元数据 (`bin/pulsar initialize-cluster-metadata`)。
-3. 部署 BookKeeper 集群。
-4. 部署 Pulsar Broker 集群。
+#### 生产者与消费者示例
+```java
+import org.apache.pulsar.client.api.*;
 
-## 三、源码分析
+public class PulsarDemo {
+    public static void main(String[] args) throws Exception {
+        // 1. 创建客户端
+        PulsarClient client = PulsarClient.builder()
+            .serviceUrl("pulsar://localhost:6650")
+            .build();
 
-### 3.1 消息存储 (Ledger)
-- **Topic**: 逻辑上的消息流。
-- **Ledger**: 物理上的存储单元，一个 Topic 由多个 Ledger 组成。
-- **Fragment**: Ledger 中的最小分布单元，写入 Bookie。
-- **Ensemble Size (E)**: 选取的 Bookie 数量。
-- **Write Quorum (W)**: 写入副本数。
-- **Ack Quorum (A)**: 确认写入数。
+        // 2. 创建生产者
+        Producer<byte[]> producer = client.newProducer()
+            .topic("my-topic")
+            .create();
 
-### 3.2 消费模型
-Pulsar 支持多种订阅模式：
-1. **Exclusive (独占)**: 一个 Subscription 只能有一个 Consumer。
-2. **Failover (灾备)**: 主备模式，主 Consumer 挂了备用接管。
-3. **Shared (共享)**: 多个 Consumer 竞争消费 (类似 Kafka Group，但不保证顺序)。
-4. **Key_Shared**: 按 Key 哈希分发，保证 Key 级别的有序性。
+        // 3. 发送消息
+        producer.send("Hello Pulsar".getBytes());
+        // 异步发送
+        producer.sendAsync("Async Msg".getBytes()).thenAccept(msgId -> {
+            System.out.println("发送成功: " + msgId);
+        });
 
-## 四、常见问题
+        // 4. 创建消费者
+        Consumer<byte[]> consumer = client.newConsumer()
+            .topic("my-topic")
+            .subscriptionName("my-sub")
+            // 订阅模式核心
+            .subscriptionType(SubscriptionType.Shared) 
+            .subscribe();
 
-### 4.1 为什么要计算存储分离？
-- **扩容灵活**: Broker 和 Bookie 可以独立扩容。Broker 无状态，扩容瞬间完成；Bookie 扩容只需加入新节点，新 Ledger 会自动使用新节点，无需像 Kafka 那样重平衡 (Rebalance) 搬运数据。
-- **故障恢复**: Broker 挂了，Topic 瞬间转移到其他 Broker，无需数据恢复。
+        // 5. 消费消息
+        while (true) {
+            Message<byte[]> msg = consumer.receive();
+            try {
+                System.out.println("收到: " + new String(msg.getData()));
+                // 确认消息 (Ack)
+                consumer.acknowledge(msg);
+            } catch (Exception e) {
+                // 否定确认 (Nack)，稍后重投
+                consumer.negativeAcknowledge(msg);
+            }
+        }
+    }
+}
+```
 
-### 4.2 Pulsar vs Kafka
-- **Kafka**: 吞吐量极高，架构简单，适合日志收集、流处理。扩容涉及数据迁移，运维成本较高。
-- **Pulsar**: 架构复杂 (组件多)，但云原生特性好，支持多租户，扩容方便，延迟更低且稳定 (尾部延迟低)。适合金融、计费等对一致性和延迟要求高的场景。
+## 二、四大订阅模式详解
+
+| 模式 | 描述 | 适用场景 |
+| :--- | :--- | :--- |
+| **Exclusive** (独占) | 默认模式。一个 Subscription 只能有一个 Consumer 连接。 | 顺序消费，单体处理。 |
+| **Failover** (灾备) | 多个 Consumer 连接，但只有一个 Master 消费。Master 挂了，Slave 自动接管。 | 顺序消费，高可用。 |
+| **Shared** (共享) | 多个 Consumer 同时消费，消息**轮询**分发。不保证顺序。 | 高吞吐，无序队列 (类似 RabbitMQ Work Queue)。 |
+| **Key_Shared** | 相同 Key 的消息发给同一个 Consumer。 | 有序的高吞吐并发消费。 |
+
+## 三、源码与高级特性
+
+### 3.1 消息确认机制 (Ack)
+- **Cumulative Ack (累积确认)**: `acknowledgeCumulative`。确认 msgId 及其之前的所有消息。适合 Exclusive/Failover。
+- **Individual Ack (单条确认)**: `acknowledge`。只确认当前那条。适合 Shared 模式。
+
+### 3.2 延时消息
+Pulsar 原生支持任意时间的延时消息，不需要像 RocketMQ 那样分等级。
+```java
+producer.newMessage()
+    .deliverAfter(10, TimeUnit.MINUTES) // 10分钟后投递
+    .value("Delayed Msg".getBytes())
+    .send();
+```
+**原理**: 延时消息会被 Tracker 追踪，到达时间后再推送到 Topic。
+
+### 3.3 多租户 (Multi-Tenancy)
+Pulsar url 结构: `persistent://tenant/namespace/topic`。
+- **Tenant (租户)**: 对应公司的一个部门。
+- **Namespace (命名空间)**: 对应一个应用或环境 (dev/prod)。
+- 资源隔离、权限控制都在租户/命名空间级别配置。
+
+## 四、对比总结
+
+| 特性 | Kafka | RocketMQ | Pulsar |
+| :--- | :--- | :--- | :--- |
+| **架构** | 存算一体 (Broker 存数据) | 存算一体 (Broker 存数据) | **存算分离** (Broker + Bookie) |
+| **扩容** | 需数据迁移 (Rebalance) | 需手动配置 | **自动负载，无迁移** |
+| **顺序消息** | 支持 (Partition 级) | 支持 | 支持 (Key_Shared) |
+| **延时消息** | 不支持 (需第三方) | 支持 (固定等级) | **支持 (任意时间)** |
+| **适用场景** | 日志收集、超大吞吐 | 业务消息、事务消息 | 云原生、金融级一致性 |

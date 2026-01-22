@@ -1,75 +1,18 @@
-# ThreadLocal 详解
+# ThreadLocal 原理与高并发陷阱
 
-## 一、什么是 ThreadLocal
+## 一、ThreadLocal 核心原理
 
-ThreadLocal 提供**线程局部变量**。这些变量不同于普通变量，每个线程都可以通过 get() 或 set() 方法访问自己的独立副本，互不干扰。
-
-**核心作用**：
-1. **线程隔离**：每个线程拥有自己的数据副本，避免竞争。
-2. **上下文传递**：在同一个线程内，跨类、跨方法传递数据（如数据库连接、Session信息）。
-
----
-
-## 二、使用示例
-
-### 2.1 基本用法
+### 1.1 内存模型
+*   每个 `Thread` 对象内部有一个 `ThreadLocalMap threadLocals`。
+*   `ThreadLocalMap` 是一个定制的 Hash Map。
+*   **Key**: `ThreadLocal` 对象本身 (弱引用)。
+*   **Value**: 线程存储的具体值 (强引用)。
 
 ```java
-public class ThreadLocalDemo {
-    private static ThreadLocal<String> threadLocal = new ThreadLocal<>();
+// Thread.java
+ThreadLocal.ThreadLocalMap threadLocals = null;
 
-    public static void main(String[] args) {
-        new Thread(() -> {
-            threadLocal.set("Thread-A-Value");
-            System.out.println("Thread A: " + threadLocal.get());
-            threadLocal.remove();
-        }).start();
-
-        new Thread(() -> {
-            threadLocal.set("Thread-B-Value");
-            System.out.println("Thread B: " + threadLocal.get());
-            threadLocal.remove();
-        }).start();
-    }
-}
-```
-
-### 2.2 实际场景：SimpleDateFormat
-
-`SimpleDateFormat` 是非线程安全的。
-
-```java
-public class DateUtils {
-    private static final ThreadLocal<SimpleDateFormat> sdfThreadLocal = 
-        ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
-
-    public static String format(Date date) {
-        return sdfThreadLocal.get().format(date);
-    }
-    
-    public static Date parse(String str) throws ParseException {
-        return sdfThreadLocal.get().parse(str);
-    }
-}
-```
-
----
-
-## 三、ThreadLocal 原理
-
-### 3.1 内存结构
-
-JDK 8 中，`ThreadLocal` 的实现机制：
-- 每个 `Thread` 内部维护了一个 `ThreadLocalMap` 成员变量。
-- `ThreadLocalMap` 的 Key 是 `ThreadLocal` 对象本身，Value 是线程需要存储的值。
-
-```java
-// Thread类源码
-public class Thread implements Runnable {
-    ThreadLocal.ThreadLocalMap threadLocals = null;
-}
-
-// ThreadLocal类源码
+// ThreadLocal.java
 public void set(T value) {
     Thread t = Thread.currentThread();
     ThreadLocalMap map = getMap(t);
@@ -80,93 +23,76 @@ public void set(T value) {
 }
 ```
 
-### 3.2 ThreadLocalMap 详解
+### 1.2 弱引用与内存泄漏 (Memory Leak)
+`Entry extends WeakReference<ThreadLocal<?>>`
 
-`ThreadLocalMap` 是一个自定义的哈希表：
-1. **Entry**：继承自 `WeakReference<ThreadLocal<?>>`。
-   ```java
-   static class Entry extends WeakReference<ThreadLocal<?>> {
-       Object value;
-       Entry(ThreadLocal<?> k, Object v) {
-           super(k); // Key是弱引用
-           value = v; // Value是强引用
-       }
-   }
-   ```
-2. **Hash冲突解决**：采用**线性探测法**（Linear Probing），而不是链表法。
+*   **Key 泄漏?** 不会。Key 是弱引用，GC 时会被回收。Map 中会出现 Key=null 的 Entry。
+*   **Value 泄漏?** **会！**
+    *   `CurrentThread` -> `ThreadLocalMap` -> `Entry` -> `Value`。
+    *   这是一条强引用链。
+    *   如果线程一直存活 (线程池)，且没有手动 remove，Value 永远不会被回收。
 
----
-
-## 四、内存泄漏问题
-
-### 4.1 弱引用导致 Key 泄漏？
-Key（ThreadLocal对象）是弱引用，当 ThreadLocal 外部没有强引用时，GC 会回收它。
-这导致 Map 中出现 Key 为 null 的 Entry，但 Value 还在。
-
-### 4.2 真正的泄漏：Value 无法回收
-Key 被回收后，Value 依然存在强引用链：
-`Thread -> ThreadLocalMap -> Entry -> Value`
-
-如果线程一直运行（如线程池核心线程），Value 永远不会被回收，导致内存泄漏。
-
-### 4.3 解决方案
-1. **手动 remove**：使用完后必须调用 `remove()` 方法。
-2. **自动清理**：`set()`、`get()`、`remove()` 方法在调用时，会尝试清理 Key 为 null 的 Entry（探测式清理/启发式清理），但这不是及时的。
-
-**最佳实践**：
+**最佳实践**:
 ```java
 try {
-    threadLocal.set(value);
-    // 业务逻辑
+    threadLocal.set(val);
+    // ...
 } finally {
-    threadLocal.remove(); // 必须防止内存泄漏
+    threadLocal.remove(); // 必须清理
 }
 ```
 
----
+## 二、高并发场景下的进阶 ThreadLocal
 
-## 五、InheritableThreadLocal
-
-ThreadLocal 无法在父子线程间传递数据。`InheritableThreadLocal` 可以解决这个问题。
-
-### 5.1 原理
-Thread 类中还有一个 `inheritableThreadLocals` 变量。
-创建子线程时，会把父线程的 `inheritableThreadLocals` 拷贝一份给子线程。
+### 2.1 FastThreadLocal (Netty)
+JDK 的 `ThreadLocal` 使用线性探测法解决 Hash 冲突，在高并发下性能一般。
+Netty 的 `FastThreadLocal` 配合 `FastThreadLocalThread` 使用 **数组下标** 直接定位，无 Hash 冲突，性能极高。
 
 ```java
-// Thread.init() 源码片段
-if (parent.inheritableThreadLocals != null)
-    this.inheritableThreadLocals =
-        ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
+// 使用示例
+private static final FastThreadLocal<String> FAST_TL = new FastThreadLocal<>();
+
+public void test() {
+    // 必须在 FastThreadLocalThread 中运行才有优化效果
+    new FastThreadLocalThread(() -> {
+        FAST_TL.set("Hello");
+        System.out.println(FAST_TL.get());
+    }).start();
+}
 ```
 
-### 5.2 局限性
-只能在线程创建时复制。如果线程池复用线程，子线程中的数据不会随父线程更新。
-可以使用阿里开源的 `TransmittableThreadLocal` 解决线程池上下文传递问题。
+### 2.2 TransmittableThreadLocal (Alibaba)
+JDK 的 `InheritableThreadLocal` 只能在 `new Thread()` 时传递父线程上下文。但在线程池中，线程是复用的，不会重复创建，导致上下文丢失。
 
----
+`TransmittableThreadLocal (TTL)` 解决了这个问题。
 
-## 六、常见面试题
+```xml
+<dependency>
+    <groupId>com.alibaba</groupId>
+    <artifactId>transmittable-thread-local</artifactId>
+    <version>2.14.2</version>
+</dependency>
+```
 
-### 1. ThreadLocalMap 为什么要用弱引用？
-**答**：
-如果是强引用，ThreadLocal 对象即使在外部被置为 null，Map 中依然持有引用，导致 ThreadLocal 无法回收。
-使用弱引用，ThreadLocal 可以在外部无引用时被 GC 回收。
-虽然 Value 依然可能泄漏，但 JDK 在 `get/set` 时会尝试清理 null Key，这是一种权衡。
+```java
+// 1. 定义 TTL
+TransmittableThreadLocal<String> context = new TransmittableThreadLocal<>();
 
-### 2. ThreadLocal 为什么采用线性探测法解决 Hash 冲突？
-**答**：
-- ThreadLocalMap 的数据量通常较小。
-- 线性探测法在数据量小时，CPU 缓存命中率高。
-- 不用链表可以节省内存（无需 Node 对象）。
+// 2. 包装线程池 (核心步骤)
+ExecutorService executor = Executors.newFixedThreadPool(1);
+ExecutorService ttlExecutor = TtlExecutors.getTtlExecutorService(executor);
 
-### 3. FastThreadLocal 是什么？
-**答**：
-Netty 提供的优化版 ThreadLocal。
-- 使用数组（Object[]）替代 Hash 表，通过 index 直接定位，无 Hash 冲突，性能更高。
-- 配合 `FastThreadLocalThread` 使用。
+// 3. 使用
+context.set("Trace-ID-001");
+ttlExecutor.submit(() -> {
+    // 这里能取到父线程的值，即使线程是复用的
+    System.out.println(context.get()); 
+});
+```
 
-### 4. ThreadLocal 在 Spring 中的应用？
-**答**：
-- **TransactionSynchronizationManager**：管理事务上下文（Connection）。
-- **RequestContextHolder**：管理 Web 请求上下文（HttpServletRequest）。
+## 三、ThreadLocal 使用场景总结
+
+1.  **数据库连接/Session 管理**: `DataSourceTransactionManager`, `Hibernate Session`.
+2.  **Web 上下文**: Spring MVC `RequestContextHolder` (存储 `HttpServletRequest`).
+3.  **日志追踪**: MDC (Log4j/Logback) 存储 TraceID。
+4.  **SimpleDateFormat**: 避免每次 new，且保证线程安全。

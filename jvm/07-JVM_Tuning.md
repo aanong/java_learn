@@ -1,75 +1,94 @@
-# JVM Tuning (JVM 调优)
+# JVM 调优实战指南
 
-JVM 调优是一个复杂的过程，通常遵循 "发现问题 -> 分析问题 -> 解决问题 -> 验证问题" 的循环。
+## 一、生产环境 JVM 参数模板
 
-## 一、调优的一般步骤
+### 1.1 标准 4C8G 服务参数
+```bash
+java -server \
+# 堆内存设置 (建议 Xms=Xmx 避免抖动)
+-Xmx4g -Xms4g \
+# 元空间设置
+-XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m \
+# 开启 G1 垃圾收集器 (JDK 8 推荐，JDK 11+ 默认)
+-XX:+UseG1GC \
+# 最大停顿时间目标 200ms
+-XX:MaxGCPauseMillis=200 \
+# 并行 GC 线程数 (逻辑核数)
+-XX:ParallelGCThreads=4 \
+# 开启 GC 日志 (JDK 8)
+-XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:/logs/gc.log \
+# 开启 GC 日志 (JDK 9+)
+# -Xlog:gc*:file=/logs/gc.log:time,tags:filecount=10,filesize=10M \
+# OOM 时自动 Dump 堆内存
+-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/logs/dump.hprof \
+-jar app.jar
+```
 
-1.  **监控与报警**
-    - 建立完善的监控体系（Prometheus + Grafana, Zabbix 等）。
-    - 关注核心指标：CPU 使用率、内存使用率、GC 频率、GC 停顿时间、接口响应时间。
+## 二、OOM (OutOfMemoryError) 实战分析
 
-2.  **发现问题**
-    - **频繁 Full GC**：导致系统停顿时间过长，响应慢。
-    - **内存溢出 (OOM)**：堆溢出、元空间溢出、栈溢出。
-    - **CPU 飙高**：死循环、频繁 GC。
-    - **内存泄漏**：内存占用持续上升，无法回收。
+### 2.1 堆溢出 (Java heap space)
+**现象**: 频繁 Full GC，CPU 飙高，最后抛出 OOM。
+**案例**: 导出大量 Excel 数据，将所有数据一次性加载到 List 中。
+**分析**: Dump 文件分析，查找最大的对象 (Dominator Tree)。
+**解决**:
+1.  **代码层面**: 分批查询，流式写入 Excel (EasyExcel)。
+2.  **参数层面**: 调大 `-Xmx` (治标不治本)。
 
-3.  **分析问题 (定位原因)**
-    - **使用工具**：jstat, jmap, jstack, MAT (Memory Analyzer Tool), VisualVM。
-    - **分析 GC 日志**：查看 GC 原因、频率、耗时。
-    - **分析 Dump 文件**：查找大对象、内存泄漏点。
+### 2.2 元空间溢出 (Metaspace)
+**现象**: 程序启动不久后 OOM，或者运行几天后 OOM。
+**原因**: 动态生成了大量类 (CGLib, Proxy, JSP)。
+**案例**: 某 RPC 框架在循环中不断创建代理类，没有缓存。
+**解决**: 增加 `-XX:MaxMetaspaceSize`，检查反射/代理类的缓存机制。
 
-4.  **解决问题 (调优手段)**
-    - **优化代码**：修复内存泄漏、减少不必要的对象创建、优化算法。
-    - **调整 JVM 参数**：
-        - 调整堆大小 (`-Xms`, `-Xmx`)。
-        - 调整新生代/老年代比例 (`-XX:NewRatio`, `-XX:SurvivorRatio`)。
-        - 选择合适的垃圾收集器。
-        - 调整大对象阈值 (`-XX:PretenureSizeThreshold`)。
-        - 调整晋升老年代阈值 (`-XX:MaxTenuringThreshold`)。
-    - **升级硬件**：增加内存、CPU。
+### 2.3 堆外内存溢出 (Direct buffer memory)
+**现象**: 堆内存很少，但物理内存被吃光。
+**原因**: Netty 使用了大量 DirectByteBuffer 但没有释放。
+**解决**: 使用 `-XX:MaxDirectMemorySize` 限制，使用 Arthas 监控堆外内存。
 
-5.  **验证问题**
-    - 观察调整后的指标是否改善。
-    - 进行压力测试。
+## 三、调优工具：Arthas
 
-## 二、常见生产案例
+阿里巴巴开源的神器，无需重启即可诊断。
 
-### 案例 1：CPU 占用过高 (100%)
-**排查步骤**：
-1.  `top` 命令找出 CPU 占用最高的进程 PID。
-2.  `top -Hp <pid>` 找出该进程下 CPU 占用最高的线程 TID。
-3.  将 TID 转换为 16 进制：`printf "%x\n" <tid>` -> `nid`。
-4.  `jstack <pid> | grep <nid> -A 20` 查看该线程的堆栈信息。
-5.  **分析**：
-    - 如果是 `VM Thread`，可能是频繁 GC。
-    - 如果是业务线程，查看代码是否有死循环或复杂计算。
+### 3.1 常用命令
+```bash
+# 1. 启动
+java -jar arthas-boot.jar
 
-### 案例 2：内存泄漏 (OOM)
-**现象**：程序运行一段时间后抛出 `java.lang.OutOfMemoryError: Java heap space`，重启后暂时恢复，一段时间后复现。
-**排查步骤**：
-1.  `jmap -dump:format=b,file=heap.hprof <pid>` 导出堆转储文件 (建议开启 `-XX:+HeapDumpOnOutOfMemoryError`)。
-2.  使用 **MAT** 或 **VisualVM** 打开 hprof 文件。
-3.  查看 **Histogram** (直方图)，按 Retained Heap (深堆) 排序，找出占用内存最大的对象。
-4.  查看 **Dominator Tree** (支配树)。
-5.  分析对象的 **GC Roots** 引用链，找到是谁在引用它导致无法回收。
-6.  **常见原因**：
-    - 静态集合类 (Map, List) 只增不减。
-    - 未关闭的资源 (Connection, IO)。
-    - ThreadLocal 未 remove。
+# 2. dashboard - 查看全局状态 (线程、内存、GC)
+$ dashboard
 
-### 案例 3：频繁 Full GC
-**原因分析**：
-1.  **元空间不足**：类加载过多。 -> 调大 `-XX:MetaspaceSize`。
-2.  **老年代空间不足**：
-    - 大对象直接进入老年代。 -> 调大 `-XX:PretenureSizeThreshold` 或优化代码。
-    - 长期存活的对象进入老年代。
-    - 动态对象年龄判定机制导致。 -> 调整 Survivor 区大小。
-3.  **System.gc() 被显式调用**。 -> 使用 `-XX:+DisableExplicitGC` 禁用。
+# 3. thread - 查看最忙的线程 (排查 CPU 100%)
+$ thread -n 3
 
-## 三、调优建议
+# 4. jad - 反编译代码 (检查线上代码版本)
+$ jad com.example.MyService
 
-1.  **优先优化代码**：代码逻辑问题是性能问题的根本。
-2.  **不要过度调优**：JVM 默认配置通常已经足够好，除非有明确的性能瓶颈。
-3.  **测试环境验证**：任何参数调整必须在测试环境经过充分压测。
-4.  **保持简单**：参数越少越好，越通用越好。
+# 5. watch - 观察方法入参/返回值/异常
+$ watch com.example.MyService methodA "{params, returnObj, throwExp}" -x 2
+
+# 6. trace - 方法内部调用耗时 (排查慢接口)
+$ trace com.example.MyService methodA
+
+# 7. heapdump - 导出堆快照
+$ heapdump /tmp/dump.hprof
+```
+
+## 四、GC 日志分析 (G1)
+
+### 4.1 日志片段
+```text
+[GC pause (G1 Evacuation Pause) (young), 0.0302120 secs]
+   [Parallel Time: 25.1 ms, GC Workers: 4]
+      [GC Worker Start (ms): Min: 123.1, Avg: 123.2, Max: 123.3]
+      [Ext Root Scanning (ms): Min: 0.5, Avg: 0.7, Max: 1.0]
+      [Object Copy (ms): Min: 20.0, Avg: 22.1, Max: 23.5]
+   [Eden: 512.0M(512.0M)->0.0B(512.0M) Survivors: 64.0M->64.0M Heap: 1200.0M(4096.0M)->688.0M(4096.0M)]
+```
+### 4.2 关键指标解读
+- **Evacuation Pause (young)**: Young GC，将存活对象从 Eden/Survivor 拷贝到 Survivor/Old。
+- **Object Copy**: 对象拷贝耗时。如果该值很高，说明存活对象很多，Young 区可能设置过大，或者短命对象变成了长命对象。
+- **Eden: 512.0M -> 0.0B**: Eden 区被清空。
+
+### 4.3 调优思路
+1.  **Mixed GC 过于频繁**: 调低 `-XX:InitiatingHeapOccupancyPercent` (默认 45%)，让并发标记更早开始。
+2.  **Humongous Allocation (大对象)**: 可以在日志中看到 `Humongous` 字样。G1 中超过 Region 50% 的对象直接进老年代。解决办法是调大 Region 大小 `-XX:G1HeapRegionSize`。
