@@ -1,0 +1,7 @@
+{
+  "type": "FeatureCollection",
+  "name": "forests",
+  "features": [
+    {"type":"Feature","properties":{"name":"黎岚林域","type":"mixed"},"geometry":{"type":"Polygon","coordinates":[[[300,900],[700,900],[700,1200],[300,1200],[300,900]]]}}
+  ]
+}

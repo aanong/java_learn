@@ -1,0 +1,12 @@
+{
+  "type": "FeatureCollection",
+  "name": "rivers",
+  "features": [
+    {"type":"Feature","properties":{"name":"天潢河","flow":"W→E","class":"main"},"geometry":{"type":"LineString","coordinates":[[400,250],[600,400],[900,600],[1200,800],[1500,1000],[1900,1200],[2100,1400]]}},
+    {"type":"Feature","properties":{"name":"嵩川","flow":"NW→SE","class":"tributary"},"geometry":{"type":"LineString","coordinates":[[300,300],[500,420],[700,560],[900,650]]}},
+    {"type":"Feature","properties":{"name":"渭溪","flow":"N→S","class":"tributary"},"geometry":{"type":"LineString","coordinates":[[1200,600],[1300,700],[1400,800],[1500,900]]}},
+    {"type":"Feature","properties":{"name":"洛涧","flow":"W→E","class":"tributary"},"geometry":{"type":"LineString","coordinates":[[800,700],[950,820],[1100,900],[1200,950]]}},
+    {"type":"Feature","properties":{"name":"青渊水","flow":"W→E","class":"main"},"geometry":{"type":"LineString","coordinates":[[900,300],[1100,500],[1300,700],[1500,900]]}},
+    {"type":"Feature","properties":{"name":"云岭河","flow":"W→E","class":"main"},"geometry":{"type":"LineString","coordinates":[[1200,300],[1400,500],[1600,700],[1800,900],[2000,1100]]}}
+  ]
+}

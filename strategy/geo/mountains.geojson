@@ -1,0 +1,8 @@
+{
+  "type": "FeatureCollection",
+  "name": "mountains",
+  "features": [
+    {"type":"Feature","properties":{"range":"玄霜山脉","peaks":["玄霜峰","玉鳞巅","苍钧岭"],"snowline":true},"geometry":{"type":"LineString","coordinates":[[200,300],[400,150],[600,150],[800,300],[950,420],[980,520],[900,650]]}},
+    {"type":"Feature","properties":{"range":"云岭山脉","peaks":["云门顶","飞霞尖"],"snowline":false},"geometry":{"type":"LineString","coordinates":[[1500,200],[1600,350],[1700,380],[1850,300],[2000,220],[2150,260],[2200,400]]}}
+  ]
+}

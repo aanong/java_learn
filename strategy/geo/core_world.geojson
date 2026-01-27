@@ -1,0 +1,30 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "云州", "type": "Highland", "desc": "高海拔山地与高山森林，受地形抬升降水影响，终年云雾缭绕。" },
+      "geometry": { "type": "Polygon", "coordinates": [[[100,35],[112,35],[112,43],[100,43],[100,35]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "青州", "type": "Coastal", "desc": "亚热带季风气候，拥有巨大的河流三角洲和漫长的海岸线。" },
+      "geometry": { "type": "Polygon", "coordinates": [[[122,25],[138,25],[138,33],[122,33],[122,25]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "玄州", "type": "Boreal", "desc": "高纬度针叶林带，受极地气团影响，冬季漫长且有极昼极夜倾向。" },
+      "geometry": { "type": "Polygon", "coordinates": [[[110,45],[130,45],[130,53],[110,53],[110,45]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "凌州", "type": "Plain", "desc": "大陆中心冲积平原，水系汇聚之地，土壤肥沃，四季分明。" },
+      "geometry": { "type": "Polygon", "coordinates": [[[112,33],[122,33],[122,39],[112,39],[112,33]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "天潢河 (干流)", "type": "River" },
+      "geometry": { "type": "LineString", "coordinates": [[100,40],[108,38],[115,36],[122,34],[130,30],[135,28]] }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "type": "FeatureCollection",
+  "name": "lakes",
+  "features": [
+    {"type":"Feature","properties":{"name":"沐泽湖","type":"tectonic"},"geometry":{"type":"Polygon","coordinates":[[[1050,920],[1130,920],[1160,950],[1130,980],[1050,980],[1020,950],[1050,920]]]}}
+    ,{"type":"Feature","properties":{"name":"漪澜泊","type":"floodplain"},"geometry":{"type":"Polygon","coordinates":[[[1150,980],[1220,980],[1250,1010],[1220,1040],[1150,1040],[1120,1010],[1150,980]]]}}
+  ]
+}

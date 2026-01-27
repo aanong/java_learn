@@ -1,0 +1,60 @@
+{
+  "name": "ancient-scroll-world",
+  "version": "2.0-astro",
+  "extent": { "width": 2400, "height": 1600, "unit": "svg-px" },
+  "crs": {
+    "type": "spherical",
+    "radius_km": 6371,
+    "projection": { "name": "equirectangular", "lat0": 30 },
+    "lonlat_bounds": { "lon": [-20, 40], "lat": [10, 50] }
+  },
+  "seasonal": {
+    "seasons": ["spring","summer","autumn","winter"],
+    "declination_deg": {"spring":0, "summer":23.5, "autumn":0, "winter":-23.5},
+    "shadow_length_scale": {"summer":0.7, "winter":1.2},
+    "wind": {"summer":"SE monsoon", "winter":"NW dry"}
+  },
+  "tide": {
+    "lunar_cycle_days": 29.53,
+    "mean_range_m": 2.5,
+    "spring_factor": 1.2,
+    "neap_factor": 0.8,
+    "ports": ["临海府","津海城"]
+  },
+  "lighting": {
+    "model": "Lambertian",
+    "ambient": 0.3,
+    "direction": {"summer_noon":[0.5,1.0,0.2], "winter_noon":[-0.2,1.0,0.1]},
+    "albedo": {"desert":0.35, "plain":0.20, "forest":0.16, "water":0.06, "snow":0.60}
+  },
+  "sources": {
+    "states": { "type": "geojson", "path": "states.geojson" },
+    "counties": { "type": "geojson", "path": "counties.geojson" },
+    "rivers": { "type": "geojson", "path": "rivers.geojson" },
+    "lakes": { "type": "geojson", "path": "lakes.geojson" },
+    "mountains": { "type": "geojson", "path": "mountains.geojson" },
+    "forests": { "type": "geojson", "path": "forests.geojson" },
+    "deserts": { "type": "geojson", "path": "deserts.geojson" },
+    "plains": { "type": "geojson", "path": "plains.geojson" },
+    "poi": { "type": "geojson", "path": "poi.geojson" },
+    "svg": { "type": "svg", "path": "../map.svg" },
+    "astro": { "type": "json", "path": "astro.json" }
+  },
+  "layers": [
+    { "id": "terrain/plain", "type": "fill", "source": "plains", "paint": {"fill-color": "#c9c289", "fill-opacity": 0.4} },
+    { "id": "terrain/forest", "type": "fill", "source": "forests", "paint": {"fill-color": "#6e8b5e", "fill-opacity": 0.5} },
+    { "id": "terrain/desert", "type": "fill", "source": "deserts", "paint": {"fill-color": "#d8b56d", "fill-opacity": 0.5} },
+    { "id": "terrain/mountain", "type": "line", "source": "mountains", "paint": {"line-color": "#595959", "line-width": 2} },
+    { "id": "hydro/river", "type": "line", "source": "rivers", "paint": {"line-color": "#3a84c6", "line-width": 3} },
+    { "id": "hydro/lake", "type": "fill", "source": "lakes", "paint": {"fill-color": "#8db7e8", "fill-opacity": 0.7} },
+    { "id": "boundary/state", "type": "fill", "source": "states", "paint": {"fill-color": "#cfa086", "fill-opacity": 0.15}, "line": {"color": "#a0593a", "width": 2} },
+    { "id": "boundary/county", "type": "line", "source": "counties", "paint": {"line-color": "#6b6b6b", "line-width": 1, "line-dasharray": [8,6]} },
+    { "id": "poi/city", "type": "symbol", "source": "poi", "filter": ["==","type","city"], "layout": {"icon":"城池"}, "text": {"field":"name","font":"Noto Serif SC","size":14} },
+    { "id": "poi/pass", "type": "symbol", "source": "poi", "filter": ["==","type","pass"], "layout": {"icon":"关隘"}, "text": {"field":"name","font":"Noto Serif SC","size":12} },
+    { "id": "poi/watergate", "type": "symbol", "source": "poi", "filter": ["==","type","watergate"], "layout": {"icon":"关隘"}, "text": {"field":"name","font":"Noto Serif SC","size":12} }
+  ],
+  "labeling": {
+    "state": { "source": "states", "property": "name", "font": "Noto Serif SC", "size": 18 },
+    "county": { "source": "counties", "property": "name", "font": "Noto Serif SC", "size": 14 }
+  }
+}

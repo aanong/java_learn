@@ -1,0 +1,76 @@
+{
+  "crs": {
+    "type": "Sphere",
+    "radius_km": 6371,
+    "center": [0, 0, 0],
+    "lonlat_bounds": { "lon": [-20, 40], "lat": [10, 50] },
+    "map_area": "Eastern hemisphere mid-latitudes",
+    "projection": {
+      "name": "Equirectangular",
+      "params": { "lat0": 30 },
+      "explain": "x = R * (lon - lon0) * cos(lat0), y = R * (lat - lat0)"
+    },
+    "orientation": {
+      "north_up": true,
+      "grid": { "lon_step": 5, "lat_step": 5 }
+    }
+  },
+  "astronomy": {
+    "axial_tilt_deg": 23.5,
+    "solar": {
+      "declination_deg": {
+        "spring_equinox": 0,
+        "summer_solstice": 23.5,
+        "autumn_equinox": 0,
+        "winter_solstice": -23.5
+      },
+      "daily_sun_path": "Compute hour angle for shading; east-to-west",
+      "albedo": {
+        "desert": 0.35,
+        "plain": 0.20,
+        "forest": 0.16,
+        "water": 0.06,
+        "snow": 0.60
+      }
+    },
+    "tides": {
+      "lunar_cycle_days": 29.53,
+      "spring_tide_factor": 1.2,
+      "neap_tide_factor": 0.8,
+      "mean_range_m": 2.5,
+      "delta_variation_m": {
+        "delta": 0.5,
+        "storm_surge": 1.0
+      }
+    },
+    "seasons": ["spring", "summer", "autumn", "winter"],
+    "wind": {
+      "summer": "SE monsoon prevailing",
+      "winter": "NW dry flow"
+    }
+  },
+  "render_guides": {
+    "lighting": {
+      "model": "Lambertian with ambient + directional",
+      "direction": {
+        "summer_noon": [0.5, 1.0, 0.2],
+        "winter_noon": [-0.2, 1.0, 0.1]
+      },
+      "shadow_length_scale": {
+        "summer": 0.7,
+        "winter": 1.2
+      }
+    },
+    "seasonal_variants": {
+      "forest": { "summer": "dense green", "winter": "thin, darker" },
+      "plain": { "summer": "bright crops", "winter": "fallow brown" },
+      "desert": { "summer": "hot tone", "winter": "cool tone" },
+      "water": { "summer": "deep blue", "winter": "slate blue" }
+    },
+    "coast_tide": {
+      "apply": true,
+      "ports": ["临海府", "津海城"],
+      "tide_effect": "Adjust harbor navigability per tide phase"
+    }
+  }
+}

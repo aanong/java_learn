@@ -1,0 +1,54 @@
+{
+  "planet": {
+    "radius_km": 6371,
+    "rotation_period_h": 24,
+    "obliquity_deg": 23.44,
+    "hemisphere": "North"
+  },
+  "coordinate_system": {
+    "projection": "Equirectangular",
+    "bounds": {
+      "lat": [15, 55],
+      "lon": [90, 150]
+    },
+    "origin": [120, 35]
+  },
+  "geography": {
+    "tectonics": {
+      "plates": ["Eurasian-like Plate", "Pacific-like Plate"],
+      "collision_zone": "Western Orogeny (Great Mountain Building)",
+      "trench": "Eastern Oceanic Trench"
+    },
+    "climate_zones": {
+      "Subtropical_Monsoon": "15°N - 30°N (Qingzhou, Linzhou)",
+      "Humid_Continental": "30°N - 45°N (Lingzhou, Yunzhou)",
+      "Subarctic_Steppe": "45°N - 55°N (Xuanzhou, Shuozhou)"
+    },
+    "hydrology": {
+      "coriolis_effect": "Right-bank erosion dominant",
+      "drainage_direction": "High West (Orogeny) to Low East (Trench)"
+    }
+  },
+  "states_core": {
+    "云州": {
+      "center": [105, 38],
+      "biome": "Highland / Alpine Forest",
+      "scientific_note": "Adiabatic cooling creates persistent cloud cover and snow caps."
+    },
+    "青州": {
+      "center": [125, 28],
+      "biome": "River Delta / Subtropical Wet",
+      "scientific_note": "Convergence of cold and warm air masses creates seasonal monsoons."
+    },
+    "玄州": {
+      "center": [115, 48],
+      "biome": "Boreal Forest / Taiga",
+      "scientific_note": "High latitude results in extreme photoperiod variation between solstices."
+    },
+    "凌州": {
+      "center": [118, 35],
+      "biome": "Alluvial Plain",
+      "scientific_note": "Deposition center for the great river system, rich loess soil."
+    }
+  }
+}

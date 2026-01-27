@@ -1,0 +1,16 @@
+{
+  "type": "FeatureCollection",
+  "name": "poi",
+  "features": [
+    {"type":"Feature","properties":{"type":"city","name":"云门城","state":"云州"},"geometry":{"type":"Point","coordinates":[610,360]}},
+    {"type":"Feature","properties":{"type":"pass","name":"云门关","state":"云州"},"geometry":{"type":"Point","coordinates":[970,600]}},
+    {"type":"Feature","properties":{"type":"beacon","name":"烽燧台","state":"玄州"},"geometry":{"type":"Point","coordinates":[1810,330]}},
+    {"type":"Feature","properties":{"type":"pass","name":"龙门峡关","state":"青州"},"geometry":{"type":"Point","coordinates":[1300,700]}},
+    {"type":"Feature","properties":{"type":"pass","name":"雪关","state":"玄州"},"geometry":{"type":"Point","coordinates":[700,220]}},
+    {"type":"Feature","properties":{"type":"pass","name":"玄霜隘","state":"玄州/凌州"},"geometry":{"type":"Point","coordinates":[1000,620]}},
+    {"type":"Feature","properties":{"type":"pass","name":"赤壁关","state":"凌州"},"geometry":{"type":"Point","coordinates":[1500,900]}},
+    {"type":"Feature","properties":{"type":"pass","name":"燧关","state":"朔州"},"geometry":{"type":"Point","coordinates":[1950,1000]}},
+    {"type":"Feature","properties":{"type":"pass","name":"云岭东隘","state":"苍州"},"geometry":{"type":"Point","coordinates":[2000,900]}},
+    {"type":"Feature","properties":{"type":"watergate","name":"海门水关","state":"临州"},"geometry":{"type":"Point","coordinates":[1900,1300]}}
+  ]
+}

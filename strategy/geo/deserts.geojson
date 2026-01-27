@@ -1,0 +1,7 @@
+{
+  "type": "FeatureCollection",
+  "name": "deserts",
+  "features": [
+    {"type":"Feature","properties":{"name":"焚风沙海","type":"erg+gobi"},"geometry":{"type":"Polygon","coordinates":[[[1700,1000],[2200,1000],[2200,1400],[1700,1400],[1700,1000]]]}}
+  ]
+}

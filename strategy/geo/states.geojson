@@ -1,0 +1,13 @@
+{
+  "type": "FeatureCollection",
+  "name": "states",
+  "features": [
+    {"type":"Feature","properties":{"name":"云州","capital":"云门城"},"geometry":{"type":"Polygon","coordinates":[[[200,200],[1100,200],[1100,800],[200,800],[200,200]]]}},
+    {"type":"Feature","properties":{"name":"玄州","capital":"玄霜城"},"geometry":{"type":"Polygon","coordinates":[[[1100,200],[2200,200],[2200,800],[1100,800],[1100,200]]]}},
+    {"type":"Feature","properties":{"name":"青州","capital":"青岚府"},"geometry":{"type":"Polygon","coordinates":[[[200,800],[1100,800],[1100,1400],[200,1400],[200,800]]]}},
+    {"type":"Feature","properties":{"name":"凌州","capital":"凌汀城"},"geometry":{"type":"Polygon","coordinates":[[[1100,800],[2200,800],[2200,1400],[1100,1400],[1100,800]]]}},
+    {"type":"Feature","properties":{"name":"朔州","capital":"朔风城"},"geometry":{"type":"Polygon","coordinates":[[[1600,900],[2200,900],[2200,1400],[1600,1400],[1600,900]]]}},
+    {"type":"Feature","properties":{"name":"苍州","capital":"苍河城"},"geometry":{"type":"Polygon","coordinates":[[[1200,200],[2200,200],[2200,800],[1200,800],[1200,200]]]}},
+    {"type":"Feature","properties":{"name":"临州","capital":"临海府"},"geometry":{"type":"Polygon","coordinates":[[[1400,1100],[2000,1100],[2000,1500],[1400,1500],[1400,1100]]]} }
+  ]
+}

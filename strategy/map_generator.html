@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>策略游戏地图生成器原型</title>
+    <style>
+        body {
+            background-color: #333;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            background: #444;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #C8102E;
+            /* 朱红色 */
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #A00C24;
+        }
+
+        #mapCanvas {
+            border: 10px solid #5d4037;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            background-color: #F4E8D0;
+            /* 暖黄色纸张底色 */
+            cursor: crosshair;
+        }
+
+        .legend {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #ddd;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>大夏王朝战略地图生成器 (v0.1)</h1>
+    <div class="controls">
+        <button onclick="generateMap()">重新生成地图</button>
+        <button onclick="saveAsImage()">📸 保存为图片</button>
+        <span style="margin-left: 10px;">基于 GEMINI.md 规范</span>
+    </div>
+
+    <canvas id="mapCanvas" width="800" height="800"></canvas>
+
+    <div class="legend">
+        图例: 🏔️ 山脉 (墨绿/深褐) | 🌊 河流 (青蓝) | 🔴 国界 | 🏰 城市
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mapCanvas');
+        const ctx = canvas.getContext('2d');
+        const WIDTH = canvas.width;
+        const HEIGHT = canvas.height;
+
+        // 规范配色
+        const COLORS = {
+            paper: '#F4E8D0',
+            mountainStart: '#2C5F2D',
+            mountainEnd: '#8B4513',
+            water: '#4A90A4',
+            border: '#C8102E',
+            text: '#333333'
+        };
+
+        const NAMES = {
+            provinces: ["云州", "青州", "玄州", "凌州", "霜州", "炎州", "幽州", "冀州"],
+            cities: ["龙门城", "鹰扬镇", "赤壁关", "虎牢关", "凤鸣县", "白鹿县"],
+            mountains: ["苍龙山脉", "天柱山", "五指山"],
+            rivers: ["青江", "玄水"]
+        };
+
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function drawPaperTexture() {
+            ctx.fillStyle = COLORS.paper;
+            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+            // 模拟做旧噪点
+            for (let i = 0; i < 5000; i++) {
+                ctx.fillStyle = `rgba(139, 69, 19, ${Math.random() * 0.1})`;
+                ctx.fillRect(randomInt(0, WIDTH), randomInt(0, HEIGHT), 2, 2);
+            }
+        }
+
+        function drawMountain(x, y, scale) {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            const height = randomInt(30, 60) * scale;
+            const width = randomInt(40, 80) * scale;
+
+            // 水墨风三角形山峰
+            ctx.lineTo(x + width / 2, y - height);
+            ctx.lineTo(x + width, y);
+            ctx.closePath();
+
+            // 渐变填充
+            const grad = ctx.createLinearGradient(x, y - height, x, y);
+            grad.addColorStop(0, COLORS.mountainStart);
+            grad.addColorStop(1, COLORS.mountainEnd);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // 勾边
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        function drawMountainRange() {
+            // 生成 3 条主要山脉
+            for (let r = 0; r < 3; r++) {
+                let startX = randomInt(100, WIDTH - 100);
+                let startY = randomInt(100, HEIGHT - 100);
+                let length = randomInt(5, 10);
+
+                for (let i = 0; i < length; i++) {
+                    drawMountain(startX + i * 40 + randomInt(-20, 20), startY + randomInt(-20, 20), 1 + Math.random() * 0.5);
+                }
+
+                // 标注山名
+                if (r < NAMES.mountains.length) {
+                    drawText(NAMES.mountains[r], startX, startY - 80, "20px Kaiti", "#1a1a1a");
+                }
+            }
+        }
+
+        function drawRiver() {
+            ctx.strokeStyle = COLORS.water;
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+
+            // 生成 2 条大河
+            for (let i = 0; i < 2; i++) {
+                ctx.beginPath();
+                let x = randomInt(0, 200);
+                let y = randomInt(200, HEIGHT - 200);
+                ctx.moveTo(x, y);
+
+                let steps = 10;
+                for (let j = 0; j < steps; j++) {
+                    let nextX = x + (WIDTH / steps);
+                    let nextY = y + randomInt(-50, 100); // 总体向东流
+
+                    // 贝塞尔曲线平滑
+                    let cp1x = x + (nextX - x) / 2;
+                    let cp1y = y;
+                    let cp2x = x + (nextX - x) / 2;
+                    let cp2y = nextY;
+
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, nextX, nextY);
+                    x = nextX;
+                    y = nextY;
+                }
+                ctx.stroke();
+
+                // 标注河名
+                drawText(NAMES.rivers[i], WIDTH / 2 + randomInt(-100, 100), y + 20, "18px Kaiti", COLORS.water);
+            }
+        }
+
+        function drawText(text, x, y, font, color) {
+            ctx.font = font || "16px Arial";
+            ctx.fillStyle = color || COLORS.text;
+            ctx.textAlign = "center";
+            ctx.fillText(text, x, y);
+        }
+
+        function drawCities() {
+            // 大夏国界 (简化的红色边框区域)
+            ctx.strokeStyle = COLORS.border;
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+            ctx.strokeRect(100, 100, WIDTH - 200, HEIGHT - 200);
+            ctx.setLineDash([]);
+
+            drawText("大 夏", WIDTH / 2, HEIGHT / 2, "60px Kaiti", "rgba(200, 16, 46, 0.2)");
+
+            // 绘制城市
+            NAMES.provinces.forEach(city => {
+                let x = randomInt(150, WIDTH - 150);
+                let y = randomInt(150, HEIGHT - 150);
+
+                // 城市图标
+                ctx.fillStyle = "#333";
+                ctx.fillRect(x - 5, y - 5, 10, 10);
+                ctx.strokeRect(x - 7, y - 7, 14, 14);
+
+                drawText(city, x, y + 25, "bold 16px Kaiti", "#000");
+            });
+
+            // 绘制特殊关隘
+            NAMES.cities.forEach(city => {
+                // 偏向边界
+                let x = randomInt(0, 1) ? randomInt(50, 150) : randomInt(WIDTH - 150, WIDTH - 50);
+                let y = randomInt(100, HEIGHT - 100);
+
+                // 关隘图标 (红色正方形)
+                ctx.fillStyle = COLORS.border;
+                ctx.fillRect(x - 6, y - 6, 12, 12);
+
+                drawText(city, x, y + 20, "14px Kaiti", COLORS.border);
+            });
+        }
+
+        function drawCompass() {
+            // 简单的八卦罗盘模拟
+            let x = WIDTH - 80;
+            let y = 80;
+
+            ctx.beginPath();
+            ctx.arc(x, y, 40, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(255,255,255,0.5)";
+            ctx.fill();
+            ctx.strokeStyle = "#333";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            drawText("北", x, y - 25, "12px Kaiti", "#333");
+            drawText("南", x, y + 35, "12px Kaiti", "#333");
+            drawText("东", x + 30, y + 5, "12px Kaiti", "#333");
+            drawText("西", x - 30, y + 5, "12px Kaiti", "#333");
+        }
+
+        function generateMap() {
+            ctx.clearRect(0, 0, WIDTH, HEIGHT);
+            drawPaperTexture();
+            drawMountainRange();
+            drawRiver();
+            drawCities();
+            drawCompass();
+        }
+
+        function saveAsImage() {
+            // 将 Canvas 转换为数据 URL
+            const dataUrl = canvas.toDataURL("image/png");
+
+            // 创建临时下载链接
+            const link = document.createElement('a');
+            link.download = `great_xia_map_${Date.now()}.png`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 初始化
+        window.onload = generateMap;
+
+    </script>
+</body>
+
+</html>

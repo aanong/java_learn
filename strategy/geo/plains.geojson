@@ -1,0 +1,7 @@
+{
+  "type": "FeatureCollection",
+  "name": "plains",
+  "features": [
+    {"type":"Feature","properties":{"name":"东南广原","fertility":"high"},"geometry":{"type":"Polygon","coordinates":[[[1000,1100],[1550,1100],[1550,1500],[1000,1500],[1000,1100]]]}}
+  ]
+}

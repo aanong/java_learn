@@ -1,0 +1,32 @@
+{
+  "type": "FeatureCollection",
+  "name": "counties",
+  "features": [
+    {"type":"Feature","properties":{"state":"云州","name":"凤鸣县"},"geometry":{"type":"Polygon","coordinates":[[[200,200],[1100,200],[1100,500],[200,500],[200,200]]]}},
+    {"type":"Feature","properties":{"state":"云州","name":"白鹿县"},"geometry":{"type":"Polygon","coordinates":[[[200,500],[650,500],[650,800],[200,800],[200,500]]]}},
+    {"type":"Feature","properties":{"state":"云州","name":"苍岩县"},"geometry":{"type":"Polygon","coordinates":[[[650,500],[1100,500],[1100,800],[650,800],[650,500]]]}},
+    {"type":"Feature","properties":{"state":"青州","name":"落霞县"},"geometry":{"type":"Polygon","coordinates":[[[200,800],[1100,800],[1100,1100],[200,1100],[200,800]]]}},
+
+    {"type":"Feature","properties":{"state":"青州","name":"萍泽县"},"geometry":{"type":"Polygon","coordinates":[[[200,1100],[650,1100],[650,1400],[200,1400],[200,1100]]]}},
+    {"type":"Feature","properties":{"state":"青州","name":"柳川县"},"geometry":{"type":"Polygon","coordinates":[[[650,1100],[1100,1100],[1100,1400],[650,1400],[650,1100]]]}},
+    {"type":"Feature","properties":{"state":"青州","name":"荻野县"},"geometry":{"type":"Polygon","coordinates":[[[200,800],[650,800],[650,1100],[200,1100],[200,800]]]}},
+    {"type":"Feature","properties":{"state":"青州","name":"明城县"},"geometry":{"type":"Polygon","coordinates":[[[650,800],[1100,800],[1100,1100],[650,1100],[650,800]]]}},
+
+    {"type":"Feature","properties":{"state":"凌州","name":"白沙县"},"geometry":{"type":"Polygon","coordinates":[[[1100,800],[1600,800],[1600,1100],[1100,1100],[1100,800]]]}},
+    {"type":"Feature","properties":{"state":"凌州","name":"关河县"},"geometry":{"type":"Polygon","coordinates":[[[1600,800],[2200,800],[2200,1100],[1600,1100],[1600,800]]]}},
+    {"type":"Feature","properties":{"state":"凌州","name":"牧皋县"},"geometry":{"type":"Polygon","coordinates":[[[1100,1100],[1600,1100],[1600,1400],[1100,1400],[1100,1100]]]}},
+    {"type":"Feature","properties":{"state":"凌州","name":"平陵县"},"geometry":{"type":"Polygon","coordinates":[[[1600,1100],[2200,1100],[2200,1400],[1600,1400],[1600,1100]]]}},
+
+    {"type":"Feature","properties":{"state":"朔州","name":"星陨县"},"geometry":{"type":"Polygon","coordinates":[[[1700,1000],[1950,1000],[1950,1200],[1700,1200],[1700,1000]]]}},
+    {"type":"Feature","properties":{"state":"朔州","name":"燧原县"},"geometry":{"type":"Polygon","coordinates":[[[1950,1000],[2200,1000],[2200,1200],[1950,1200],[1950,1000]]]}},
+    {"type":"Feature","properties":{"state":"朔州","name":"金台县"},"geometry":{"type":"Polygon","coordinates":[[[1700,1200],[2200,1200],[2200,1400],[1700,1400],[1700,1200]]]}},
+
+    {"type":"Feature","properties":{"state":"苍州","name":"桑野县"},"geometry":{"type":"Polygon","coordinates":[[[1200,200],[1700,200],[1700,500],[1200,500],[1200,200]]]}},
+    {"type":"Feature","properties":{"state":"苍州","name":"沃川县"},"geometry":{"type":"Polygon","coordinates":[[[1700,200],[2200,200],[2200,500],[1700,500],[1700,200]]]}},
+    {"type":"Feature","properties":{"state":"苍州","name":"清泉县"},"geometry":{"type":"Polygon","coordinates":[[[1200,500],[2200,500],[2200,800],[1200,800],[1200,500]]]}},
+
+    {"type":"Feature","properties":{"state":"临州","name":"阡陌县"},"geometry":{"type":"Polygon","coordinates":[[[1400,1100],[1700,1100],[1700,1300],[1400,1300],[1400,1100]]]}},
+    {"type":"Feature","properties":{"state":"临州","name":"沿津县"},"geometry":{"type":"Polygon","coordinates":[[[1700,1100],[2000,1100],[2000,1300],[1700,1300],[1700,1100]]]}},
+    {"type":"Feature","properties":{"state":"临州","name":"清浦县"},"geometry":{"type":"Polygon","coordinates":[[[1400,1300],[2000,1300],[2000,1500],[1400,1500],[1400,1300]]]}}
+  ]
+}

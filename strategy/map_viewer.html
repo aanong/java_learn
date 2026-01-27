@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>大夏王朝战略地图 - 史诗阅览模式</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #d4af37;
+            font-family: 'Kaiti', 'SimKai', serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            border-bottom: 2px solid #d4af37;
+            padding-bottom: 10px;
+        }
+
+        .map-container {
+            position: relative;
+            border: 15px solid #5d4037;
+            border-image: linear-gradient(to bottom right, #8B4513, #CD853F, #8B4513) 1;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            max-width: 90%;
+            overflow: hidden;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            transition: transform 0.3s ease;
+            cursor: zoom-in;
+        }
+
+        img:hover {
+            transform: scale(1.02);
+        }
+
+        .info {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        button {
+            background: #d4af37;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin: 0 10px;
+        }
+
+        button:hover {
+            background: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>九州山河图 - 伟大大夏国</h1>
+
+    <div class="map-container">
+        <img src="ancient_map_ai.png" alt="Ancient Strategy Map" id="mapImage">
+    </div>
+
+    <div class="controls">
+        <button onclick="window.open('ancient_map_ai.png')">查看原图</button>
+        <button onclick="downloadImage()">下载地图</button>
+    </div>
+
+    <div class="info">
+        <p>基于 GEMINI.md 规范生成 | 渲染引擎: AntiGravity AI | 版本: v0.1</p>
+    </div>
+
+    <script>
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.href = 'ancient_map_ai.png';
+            link.download = 'Great_Xia_Strategy_Map.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+
+</html>
