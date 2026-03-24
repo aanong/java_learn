@@ -1,3 +1,309 @@
+# Spring
+## Ioc/DI
+### 注入方式
+
+#### 构造器注入
+
+##### 特点
+
+- 依赖声明为 final，对象不可变
+- 构造即完备，不存在 null 风险
+- 单元测试直接 new 传入 mock
+- 依赖过多时构造器参数变长，反向提示重构
+
+- 依赖多时构造器参数列表较长
+
+````java
+@Service
+public class OrderService {
+
+    private final PaymentService paymentService;
+
+    // 单构造器时 @Autowired 可省略（Spring 4.3+）
+    @Autowired
+    public OrderService(PaymentService ps) {
+        this.paymentService = ps;
+    }
+
+    public void createOrder() {
+        paymentService.pay();
+    }
+}
+````
+
+
+
+#### Setter 注入
+
+##### 特点
+
+- 适合可选依赖（不一定注入）
+- 允许对象创建后再设置或重置依赖
+
+- 依赖可变，存在 null 指针风险
+- 调用 setter 之前对象处于不完整状态
+- 不能声明 final
+
+````java
+@Service
+public class OrderService {
+
+    private PaymentService paymentService;
+
+    @Autowired
+    public void setPaymentService(
+            PaymentService ps) {
+        this.paymentService = ps;
+    }
+
+    public void createOrder() {
+        paymentService.pay();
+    }
+}
+````
+
+
+
+#### 字段注入
+
+##### 特点
+
+- 写法最简洁，上手快
+
+- 无法声明 final，非线程安全
+- 单测需要反射才能注入 mock
+- 隐藏真实依赖，违反显式设计
+- 依赖再多也无感知，不利于重构
+
+````java
+@Service
+public class OrderService {
+
+    @Autowired
+    private PaymentService paymentService;
+
+    // 无构造器，Spring 通过反射注入
+    public void createOrder() {
+        paymentService.pay();
+    }
+}
+````
+
+### Bean 作用域
+
+#### singleton
+ 整个 IoC 容器中只创建一个 Bean 实例，所有注入和 getBean() 获取的都是同一个对象。适合无状态的 Service、Repository 等。
+
+#### prototype
+
+每次从容器获取 Bean 时都会创建一个新实例，Spring 不管理其销毁。适合有状态的对象，如命令对象、DTO 等。
+
+#### request
+
+每次 HTTP 请求创建一个新实例，请求结束后销毁。
+
+#### session
+
+绑定到 HTTP Session 生命周期，同一个 Session 内共享同一个实例。
+
+#### application
+
+绑定到 `ServletContext`，相当于 Web 应用级别的单例（比 `singleton` 范围更大，跨容器共享）。
+
+#### websocket
+
+绑定到一次 WebSocket 连接的生命周期。 
+
+#### 配置方式
+
+````java
+// 注解方式
+@Component
+@Scope("prototype")
+public class MyBean { ... }
+
+// 或使用常量
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+
+// Web 专属作用域
+@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
+````
+
+## Spring事务
+
+### Spring 事务失效机制
+
+#### AOP 代理未生效
+
+##### 自调用（Self-invocation）
+
+同类内部方法调用不经过代理@Transactional 无法被 AOP 拦截
+
+##### 非 Spring 管理的 Bean
+
+new 出来的对象没有代理包装需通过 @Autowired 注入使用
+
+#### 方法可见性问题
+
+##### 方法非 public
+
+private / protected 方法Spring AOP 无法代理，直接忽略注解
+
+#####  final 或 static 方法
+
+CGLIB 代理无法重写 final 方法static 方法不属于实例方法
+
+#### 异常处理问题
+
+##### 异常被 try-catch 吃掉
+
+吃掉事务管理器感知不到异常需 throw 或手动标记 rollbackOnly
+
+##### 异常类型不匹配
+
+默认只回滚 RuntimeException需指定 rollbackFor = Exception.class
+
+#### 事务传播行为配置错误
+
+##### Propagation.NOT_SUPPORTED
+
+显式挂起当前事务方法体内操作在无事务状态执行等同于主动关闭事务
+
+##### REQUIRES_NEW 误用
+
+误用开启独立事务，外层异常内层已提交无法跟随回滚数据不一致风险
+
+#### 基础设施问题
+
+##### 数据库引擎不支持事务
+
+MySQL MyISAM 无事务支持需使用 InnoDB 引擎
+
+##### 多线程跨线程调用
+
+事务绑定在 ThreadLocal 上子线程获取不到父线程的事务
+
+### Spring 事务传播机制
+
+#### REQUIRED（默认）
+
+````java
+@Transactional(propagation = Propagation.REQUIRED)
+````
+
+👉 **有事务就加入，没有就创建**
+
+- 外层有事务 → 加入外层事务
+- 外层没有事务 → 自己创建事务
+
+✔ 最常用（默认
+
+####  REQUIRES_NEW
+
+````java
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+````
+
+ **必须新建事务，挂起当前事务**
+
+- 无论外层有没有事务 → 都新建
+- 外层事务会被**挂起（suspend）**
+
+✔ 常用于：
+
+- 日志记录
+- 审计
+- 不希望被主事务影响的操作
+
+#### SUPPORTS
+
+````java
+@Transactional(propagation = Propagation.SUPPORTS)
+````
+
+👉 **有事务就用，没有就不用**
+
+- 有事务 → 加入
+- 没有事务 → 非事务执行
+
+✔ 适用于：
+
+- 查询操作（不强制事务
+
+####  NOT_SUPPORTED
+
+````java
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+````
+
+👉 **不支持事务，强制非事务执行**
+
+- 如果有事务 → 挂起
+- 自己以非事务方式执行
+
+✔ 适用于：
+
+- 不希望被事务影响的操作（如调用外部接口）
+
+#### MANDATORY
+
+````java
+@Transactional(propagation = Propagation.MANDATORY)
+````
+
+👉 **必须在事务中执行，否则报错**
+
+- 有事务 → 加入
+- 没有事务 → 抛异常
+
+✔ 适用于：
+
+- 强依赖事务的逻辑
+
+#### NEVER
+
+````java
+@Transactional(propagation = Propagation.NEVER)
+````
+
+👉 **必须无事务执行，否则报错**
+
+- 有事务 → 抛异常
+- 没有事务 → 正常执行
+
+✔ 很少使用
+
+#### NESTED
+
+````java
+@Transactional(propagation = Propagation.NESTED)
+````
+
+👉 **嵌套事务（基于 savepoint）**
+
+- 外层有事务 → 创建子事务（保存点）
+- 外层没有 → 类似 REQUIRED
+
+✔ 特点：
+
+- 子事务回滚 → 不影响外层
+- 外层回滚 → 子事务一起回滚
+
+⚠️ 依赖数据库支持（如 MySQL InnoDB）
+
+
+
+
+
+
+# 微服务
+
+## Nacos注册中心
+
+
+
+# Java基础
+
 ###  多线程
 
 ##### 线程基本概念
@@ -393,6 +699,7 @@ public class VolatileTest {
 
 ##### 1. synchronized 和 ReentrantLock 的区别？
 **答**：
+
 | 特性     | synchronized | ReentrantLock                |
 | -------- | ------------ | ---------------------------- |
 | 实现     | JVM 层面     | JDK API 层面                 |
@@ -1322,6 +1629,10 @@ MySQL 的架构大体分为 **Server 层** 和 **存储引擎层**。
   - 读取数据时，先看 Buffer Pool 中有没有，有则直接读取，无则从磁盘加载。
   - 修改数据时，先修改 Buffer Pool 中的页（标记为 **脏页**），后台线程定期刷脏到磁盘。
 - **LRU 算法**：MySQL 对标准 LRU 做了改进（分代 LRU），防止全表扫描导致热数据被淘汰。
+  * LRU被拆分成两个部分 old区（37%） 和new区（63%）
+  * 当数据第一次被加载到Buffer Pool不会直接进入 Young，防止一次性大查询污染缓存
+  * 二次访问才进入 Young（关键），这是“真正的热点数据”
+  * 优先从 Old 区尾部淘汰（冷数据优先被清理，热点数据（Young）不容易被挤掉）
 
 ##### 2. Redo Log (重做日志) - 物理日志
 
@@ -3367,8 +3678,8 @@ Object loadBarrier(Object ref){
 作用：
 
 1️⃣ 检查对象是否已移动
- 2️⃣ 修复指针
- 3️⃣ 保证并发 GC 正确性
+2️⃣ 修复指针
+3️⃣ 保证并发 GC 正确性
 
 **ZGC GC 执行流程**
 
