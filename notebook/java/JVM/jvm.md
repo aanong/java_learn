@@ -2353,6 +2353,59 @@ SETBIT sign:20260306 1001 1
 BITCOUNT
 ```
 
+#### Redis持久化原理
+
+##### RDB（Redis DataBase）快照持久化
+
+###### 原理
+
+RDB 的本质是：**在某个时间点，将内存中的数据生成一个二进制快照文件（dump.rdb）**
+
+可以理解为：
+
+> 对 Redis 当前数据做一次“全量备份”
+
+###### 触发方式
+
+**自动触发（配置）**
+
+````shell
+save 900 1      # 900秒内至少1次修改
+save 300 10     # 300秒内至少10次修改
+save 60 10000   # 60秒内至少10000次修改
+````
+
+**手动触发**
+
+````shell
+SAVE      # 同步阻塞
+BGSAVE    # 异步（推荐）
+````
+
+
+
+##### AOF（Append Only File）日志持久化
+
+###### 原理
+
+AOF 的核心思想：
+
+> 将每一条写操作命令追加到日志文件中
+
+````bas
+SET key value
+INCR count
+````
+
+###### 刷盘策略（关键）
+
+````shell
+appendfsync always     # 每次写都刷盘（最安全，最慢）
+appendfsync everysec   # 每秒刷盘（推荐）
+appendfsync no         # 交给操作系统
+````
+
+
 
 
 ### JVM
